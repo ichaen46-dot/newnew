@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전화번호 관리 시스템</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Noto Sans KR -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .modal-backdrop {
+            background-color: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Header Section -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                        <i class="fa-solid fa-address-book text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-900 tracking-tight">전화번호 관리 시스템</h1>
+                        <p class="text-xs text-slate-500 hidden sm:block">스마트 연락처 통합 관리 솔루션</p>
+                    </div>
+                </div>
+
+                <!-- Stats & Actions -->
+                <div class="flex items-center space-x-3">
+                    <button id="openAddModalBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 shadow-sm hover:shadow active:scale-95 text-sm">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span class="hidden sm:inline">새 연락처 추가</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row gap-6">
+
+        <!-- Sidebar / Filter Panel -->
+        <aside class="w-full md:w-64 flex-shrink-0 space-y-6">
+            <!-- Navigation Filters -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-2">연락처 필터</h2>
+                <nav class="space-y-1" id="groupFilterNav">
+                    <button data-group="ALL" class="nav-filter-btn w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700">
+                        <span class="flex items-center space-x-2.5">
+                            <i class="fa-solid fa-users text-blue-600 w-5"></i>
+                            <span>전체 연락처</span>
+                        </span>
+                        <span id="count-ALL" class="bg-blue-100 text-blue-700 py-0.5 px-2 rounded-full text-xs font-semibold">0</span>
+                    </button>
+                    <button data-group="FAV" class="nav-filter-btn w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                        <span class="flex items-center space-x-2.5">
+                            <i class="fa-solid fa-star text-amber-400 w-5"></i>
+                            <span>즐겨찾기</span>
+                        </span>
+                        <span id="count-FAV" class="bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-xs font-semibold">0</span>
+                    </button>
+                    <div class="pt-3 pb-1">
+                        <div class="border-t border-slate-100"></div>
+                    </div>
+                    <button data-group="가족" class="nav-filter-btn w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                        <span class="flex items-center space-x-2.5">
+                            <i class="fa-solid fa-house-chimney text-emerald-500 w-5"></i>
+                            <span>가족</span>
+                        </span>
+                        <span id="count-가족" class="bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-xs font-semibold">0</span>
+                    </button>
+                    <button data-group="친구" class="nav-filter-btn w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                        <span class="flex items-center space-x-2.5">
+                            <i class="fa-solid fa-user-group text-purple-500 w-5"></i>
+                            <span>친구</span>
+                        </span>
+                        <span id="count-친구" class="bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-xs font-semibold">0</span>
+                    </button>
+                    <button data-group="직장" class="nav-filter-btn w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                        <span class="flex items-center space-x-2.5">
+                            <i class="fa-solid fa-briefcase text-indigo-500 w-5"></i>
+                            <span>직장</span>
+                        </span>
+                        <span id="count-직장" class="bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-xs font-semibold">0</span>
+                    </button>
+                    <button data-group="기타" class="nav-filter-btn w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                        <span class="flex items-center space-x-2.5">
+                            <i class="fa-solid fa-tag text-slate-400 w-5"></i>
+                            <span>기타</span>
+                        </span>
+                        <span id="count-기타" class="bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-xs font-semibold">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Import / Export Panel -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-2">데이터 관리</h2>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="exportJsonBtn" class="flex flex-col items-center justify-center p-2.5 border border-slate-200 rounded-lg hover:bg-slate-50 text-xs font-medium text-slate-700 transition">
+                        <i class="fa-solid fa-file-export text-slate-500 text-base mb-1"></i>
+                        JSON 내보내기
+                    </button>
+                    <button id="exportCsvBtn" class="flex flex-col items-center justify-center p-2.5 border border-slate-200 rounded-lg hover:bg-slate-50 text-xs font-medium text-slate-700 transition">
+                        <i class="fa-solid fa-file-csv text-emerald-600 text-base mb-1"></i>
+                        CSV 내보내기
+                    </button>
+                </div>
+                <label for="importJsonInput" class="flex items-center justify-center space-x-2 w-full p-2.5 border border-dashed border-slate-300 rounded-lg hover:border-blue-500 hover:bg-blue-50/50 text-xs font-medium text-slate-600 transition cursor-pointer">
+                    <i class="fa-solid fa-file-import text-blue-500"></i>
+                    <span>JSON 가져오기</span>
+                    <input type="file" id="importJsonInput" accept=".json" class="hidden">
+                </label>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <section class="flex-1 flex flex-col space-y-4 min-w-0">
+            <!-- Search & Controls Top Bar -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3 items-center justify-between">
+                <!-- Search Input -->
+                <div class="relative w-full sm:w-80">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <input type="text" id="searchInput" placeholder="이름, 전화번호, 이메일 검색..." 
+                        class="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+                    <button id="clearSearchBtn" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Sort & Batch Control Bar -->
+                <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
+                    <!-- Sort Dropdown -->
+                    <div class="flex items-center space-x-2">
+                        <label for="sortSelect" class="text-xs text-slate-500 whitespace-nowrap hidden lg:inline">정렬:</label>
+                        <select id="sortSelect" class="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="name">이름순 (가나다)</option>
+                            <option value="recent">최근 추가순</option>
+                            <option value="group">그룹순</option>
+                        </select>
+                    </div>
+
+                    <!-- View Mode Toggle -->
+                    <div class="flex border border-slate-200 rounded-lg overflow-hidden p-0.5 bg-slate-50">
+                        <button id="cardViewBtn" class="p-1.5 text-slate-600 hover:text-blue-600 rounded bg-white shadow-sm" title="카드 뷰">
+                            <i class="fa-solid fa-border-all w-4 h-4 flex items-center justify-center"></i>
+                        </button>
+                        <button id="tableViewBtn" class="p-1.5 text-slate-400 hover:text-blue-600 rounded" title="테이블 뷰">
+                            <i class="fa-solid fa-list w-4 h-4 flex items-center justify-center"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Action Bar (Hidden by default) -->
+            <div id="batchActionBar" class="hidden bg-slate-800 text-white p-3 rounded-xl shadow-md flex items-center justify-between animate-fade-in">
+                <div class="flex items-center space-x-3 text-sm">
+                    <input type="checkbox" id="selectAllCheckbox" class="rounded text-blue-500 focus:ring-0 w-4 h-4 cursor-pointer">
+                    <span><strong id="selectedCount">0</strong>개 선택됨</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="batchDeleteBtn" class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span>선택 삭제</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contact List Container -->
+            <div id="contactListContainer" class="flex-1">
+                <!-- Cards Grid View -->
+                <div id="cardGridView" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Cards injected via JS -->
+                </div>
+
+                <!-- Table View (Hidden by default) -->
+                <div id="tableView" class="hidden bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
+                                <tr>
+                                    <th class="p-4 w-10 text-center">
+                                        <input type="checkbox" id="tableSelectAll" class="rounded text-blue-600 focus:ring-0 w-4 h-4">
+                                    </th>
+                                    <th class="p-4">이름</th>
+                                    <th class="p-4">전화번호</th>
+                                    <th class="p-4">이메일</th>
+                                    <th class="p-4">그룹</th>
+                                    <th class="p-4 text-center">즐겨찾기</th>
+                                    <th class="p-4 text-right">작업</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="divide-y divide-slate-100">
+                                <!-- Table rows injected via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-slate-200 border-dashed text-center">
+                    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-4 text-2xl">
+                        <i class="fa-solid fa-address-card"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-slate-800">등록된 연락처가 없습니다</h3>
+                    <p class="text-sm text-slate-500 max-w-sm mt-1 mb-4">새로운 연락처를 추가하거나 검색 조건을 변경해 보세요.</p>
+                    <button id="emptyAddBtn" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition shadow-sm">
+                        <i class="fa-solid fa-plus mr-1"></i> 연락처 추가하기
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for Add / Edit Contact -->
+    <div id="contactModal" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden px-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden transform transition-all">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <h3 id="modalTitle" class="text-lg font-bold text-slate-800">새 연락처 추가</h3>
+                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 text-lg w-8 h-8 rounded-full hover:bg-slate-200/50 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="contactForm" class="p-6 space-y-4">
+                <input type="hidden" id="contactId">
+
+                <!-- Name Input -->
+                <div>
+                    <label for="inputName" class="block text-xs font-semibold text-slate-600 uppercase mb-1">이름 <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <input type="text" id="inputName" required placeholder="홍길동"
+                            class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+                </div>
+
+                <!-- Phone Input -->
+                <div>
+                    <label for="inputPhone" class="block text-xs font-semibold text-slate-600 uppercase mb-1">전화번호 <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                            <i class="fa-solid fa-phone"></i>
+                        </span>
+                        <input type="tel" id="inputPhone" required placeholder="010-1234-5678" maxlength="13"
+                            class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+                    <p id="phoneError" class="text-xs text-red-500 mt-1 hidden">올바른 전화번호 형식이 아닙니다 (예: 010-1234-5678).</p>
+                </div>
+
+                <!-- Email Input -->
+                <div>
+                    <label for="inputEmail" class="block text-xs font-semibold text-slate-600 uppercase mb-1">이메일</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                            <i class="fa-solid fa-envelope"></i>
+                        </span>
+                        <input type="email" id="inputEmail" placeholder="example@domain.com"
+                            class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    </div>
+                </div>
+
+                <!-- Group Input -->
+                <div>
+                    <label for="inputGroup" class="block text-xs font-semibold text-slate-600 uppercase mb-1">그룹</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </span>
+                        <select id="inputGroup" class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
+                            <option value="가족">가족</option>
+                            <option value="친구">친구</option>
+                            <option value="직장">직장</option>
+                            <option value="기타" selected>기타</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Favorite Checkbox -->
+                <div class="flex items-center space-x-2 pt-1">
+                    <input type="checkbox" id="inputFavorite" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-slate-300 cursor-pointer">
+                    <label for="inputFavorite" class="text-sm font-medium text-slate-700 cursor-pointer select-none">즐겨찾기에 추가</label>
+                </div>
+
+                <!-- Notes / Memo -->
+                <div>
+                    <label for="inputMemo" class="block text-xs font-semibold text-slate-600 uppercase mb-1">메모</label>
+                    <textarea id="inputMemo" rows="3" placeholder="특이사항이나 추가 메모를 입력하세요..." 
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"></textarea>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="flex justify-end space-x-2 pt-4 border-t border-slate-100">
+                    <button type="button" id="cancelModalBtn" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+                        취소
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
+                        저장
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden px-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center transform transition-all">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600 mx-auto mb-4 text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 id="confirmTitle" class="text-lg font-bold text-slate-800">정말 삭제하시겠습니까?</h3>
+            <p id="confirmMessage" class="text-sm text-slate-500 mt-2">이 작업은 되돌릴 수 없습니다.</p>
+            <div class="flex justify-center space-x-3 mt-6">
+                <button id="cancelConfirmBtn" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+                    취소
+                </button>
+                <button id="actionConfirmBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition">
+                    삭제
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Sample Initial Data
+        const initialContacts = [
+            { id: '1', name: '김철수', phone: '010-1234-5678', email: 'chulsoo@example.com', group: '직장', favorite: true, memo: '개발팀 팀장님', createdAt: Date.now() - 1000000 },
+            { id: '2', name: '이영희', phone: '010-9876-5432', email: 'younghee@example.com', group: '친구', favorite: false, memo: '고등학교 동창', createdAt: Date.now() - 800000 },
+            { id: '3', name: '박민수', phone: '010-5555-4444', email: 'minsu@family.net', group: '가족', favorite: true, memo: '사촌 동생', createdAt: Date.now() - 600000 },
+            { id: '4', name: '최지은', phone: '010-3333-2222', email: 'jieun@company.com', group: '직장', favorite: false, memo: '디자인팀 대리', createdAt: Date.now() - 400000 },
+            { id: '5', name: '한지원', phone: '010-7777-8888', email: 'jiwon@gmail.com', group: '기타', favorite: false, memo: '독서 모임 회원', createdAt: Date.now() - 200000 }
+        ];
+
+        // Application State
+        let contacts = [];
+        let currentGroupFilter = 'ALL';
+        let searchQuery = '';
+        let currentSort = 'name';
+        let viewMode = 'card'; // 'card' or 'table'
+        let selectedContactIds = new Set();
+        let confirmCallback = null;
+
+        // DOM Elements Cache
+        const DOM = {
+            cardGridView: document.getElementById('cardGridView'),
+            tableView: document.getElementById('tableView'),
+            tableBody: document.getElementById('tableBody'),
+            emptyState: document.getElementById('emptyState'),
+            searchInput: document.getElementById('searchInput'),
+            clearSearchBtn: document.getElementById('clearSearchBtn'),
+            sortSelect: document.getElementById('sortSelect'),
+            cardViewBtn: document.getElementById('cardViewBtn'),
+            tableViewBtn: document.getElementById('tableViewBtn'),
+            openAddModalBtn: document.getElementById('openAddModalBtn'),
+            emptyAddBtn: document.getElementById('emptyAddBtn'),
+            contactModal: document.getElementById('contactModal'),
+            closeModalBtn: document.getElementById('closeModalBtn'),
+            cancelModalBtn: document.getElementById('cancelModalBtn'),
+            contactForm: document.getElementById('contactForm'),
+            modalTitle: document.getElementById('modalTitle'),
+            contactId: document.getElementById('contactId'),
+            inputName: document.getElementById('inputName'),
+            inputPhone: document.getElementById('inputPhone'),
+            inputEmail: document.getElementById('inputEmail'),
+            inputGroup: document.getElementById('inputGroup'),
+            inputFavorite: document.getElementById('inputFavorite'),
+            inputMemo: document.getElementById('inputMemo'),
+            phoneError: document.getElementById('phoneError'),
+            batchActionBar: document.getElementById('batchActionBar'),
+            selectedCount: document.getElementById('selectedCount'),
+            selectAllCheckbox: document.getElementById('selectAllCheckbox'),
+            tableSelectAll: document.getElementById('tableSelectAll'),
+            batchDeleteBtn: document.getElementById('batchDeleteBtn'),
+            confirmModal: document.getElementById('confirmModal'),
+            confirmTitle: document.getElementById('confirmTitle'),
+            confirmMessage: document.getElementById('confirmMessage'),
+            cancelConfirmBtn: document.getElementById('cancelConfirmBtn'),
+            actionConfirmBtn: document.getElementById('actionConfirmBtn'),
+            exportJsonBtn: document.getElementById('exportJsonBtn'),
+            exportCsvBtn: document.getElementById('exportCsvBtn'),
+            importJsonInput: document.getElementById('importJsonInput'),
+            toastContainer: document.getElementById('toastContainer'),
+            groupFilterNav: document.getElementById('groupFilterNav')
+        };
+
+        // Initialize App
+        window.onload = function() {
+            loadContacts();
+            setupEventListeners();
+            render();
+        };
+
+        // Load data from LocalStorage
+        function loadContacts() {
+            const saved = localStorage.getItem('phonebook_contacts');
+            if (saved) {
+                try {
+                    contacts = JSON.parse(saved);
+                } catch (e) {
+                    contacts = [...initialContacts];
+                    saveContacts();
+                }
+            } else {
+                contacts = [...initialContacts];
+                saveContacts();
+            }
+        }
+
+        // Save data to LocalStorage
+        function saveContacts() {
+            localStorage.setItem('phonebook_contacts', JSON.stringify(contacts));
+            updateGroupCounts();
+        }
+
+        // Set up Event Listeners
+        function setupEventListeners() {
+            // Search Input
+            DOM.searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.trim().toLowerCase();
+                DOM.clearSearchBtn.classList.toggle('hidden', searchQuery === '');
+                render();
+            });
+
+            DOM.clearSearchBtn.addEventListener('click', () => {
+                DOM.searchInput.value = '';
+                searchQuery = '';
+                DOM.clearSearchBtn.classList.add('hidden');
+                render();
+            });
+
+            // Group Filters Navigation
+            DOM.groupFilterNav.addEventListener('click', (e) => {
+                const btn = e.target.closest('.nav-filter-btn');
+                if (!btn) return;
+
+                document.querySelectorAll('.nav-filter-btn').forEach(b => {
+                    b.classList.remove('bg-blue-50', 'text-blue-700');
+                    b.classList.add('text-slate-600', 'hover:bg-slate-50');
+                });
+
+                btn.classList.add('bg-blue-50', 'text-blue-700');
+                btn.classList.remove('text-slate-600', 'hover:bg-slate-50');
+
+                currentGroupFilter = btn.getAttribute('data-group');
+                render();
+            });
+
+            // Sort Selector
+            DOM.sortSelect.addEventListener('change', (e) => {
+                currentSort = e.target.value;
+                render();
+            });
+
+            // View Mode Switching
+            DOM.cardViewBtn.addEventListener('click', () => setViewMode('card'));
+            DOM.tableViewBtn.addEventListener('click', () => setViewMode('table'));
+
+            // Modal Controls
+            DOM.openAddModalBtn.addEventListener('click', () => openModal());
+            DOM.emptyAddBtn.addEventListener('click', () => openModal());
+            DOM.closeModalBtn.addEventListener('click', closeModal);
+            DOM.cancelModalBtn.addEventListener('click', closeModal);
+
+            // Auto format Phone Number input
+            DOM.inputPhone.addEventListener('input', (e) => {
+                let val = e.target.value.replace(/[^0-9]/g, '');
+                if (val.length > 3 && val.length <= 7) {
+                    val = val.slice(0, 3) + '-' + val.slice(3);
+                } else if (val.length > 7) {
+                    val = val.slice(0, 3) + '-' + val.slice(3, 7) + '-' + val.slice(7, 11);
+                }
+                e.target.value = val;
+            });
+
+            // Form Submit
+            DOM.contactForm.addEventListener('submit', handleFormSubmit);
+
+            // Batch selection checkboxes
+            DOM.selectAllCheckbox.addEventListener('change', handleSelectAll);
+            DOM.tableSelectAll.addEventListener('change', handleSelectAll);
+            DOM.batchDeleteBtn.addEventListener('click', handleBatchDelete);
+
+            // Modal confirm actions
+            DOM.cancelConfirmBtn.addEventListener('click', closeConfirmModal);
+            DOM.actionConfirmBtn.addEventListener('click', () => {
+                if (confirmCallback) confirmCallback();
+                closeConfirmModal();
+            });
+
+            // Export & Import Buttons
+            DOM.exportJsonBtn.addEventListener('click', exportToJSON);
+            DOM.exportCsvBtn.addEventListener('click', exportToCSV);
+            DOM.importJsonInput.addEventListener('change', importFromJSON);
+        }
+
+        // Filter and Sort Contacts
+        function getFilteredContacts() {
+            return contacts.filter(contact => {
+                // Group Filter
+                if (currentGroupFilter === 'FAV') {
+                    if (!contact.favorite) return false;
+                } else if (currentGroupFilter !== 'ALL') {
+                    if (contact.group !== currentGroupFilter) return false;
+                }
+
+                // Search Query Filter
+                if (searchQuery) {
+                    const nameMatch = contact.name.toLowerCase().includes(searchQuery);
+                    const phoneMatch = contact.phone.toLowerCase().includes(searchQuery);
+                    const emailMatch = (contact.email || '').toLowerCase().includes(searchQuery);
+                    const groupMatch = (contact.group || '').toLowerCase().includes(searchQuery);
+                    return nameMatch || phoneMatch || emailMatch || groupMatch;
+                }
+
+                return true;
+            }).sort((a, b) => {
+                if (currentSort === 'name') {
+                    return a.name.localeCompare(b.name, 'ko-KR');
+                } else if (currentSort === 'recent') {
+                    return (b.createdAt || 0) - (a.createdAt || 0);
+                } else if (currentSort === 'group') {
+                    return a.group.localeCompare(b.group, 'ko-KR');
+                }
+                return 0;
+            });
+        }
+
+        // Render UI
+        function render() {
+            const filtered = getFilteredContacts();
+            updateGroupCounts();
+
+            if (filtered.length === 0) {
+                DOM.cardGridView.classList.add('hidden');
+                DOM.tableView.classList.add('hidden');
+                DOM.emptyState.classList.remove('hidden');
+            } else {
+                DOM.emptyState.classList.add('hidden');
+                if (viewMode === 'card') {
+                    DOM.cardGridView.classList.remove('hidden');
+                    DOM.tableView.classList.add('hidden');
+                    renderCardGrid(filtered);
+                } else {
+                    DOM.cardGridView.classList.add('hidden');
+                    DOM.tableView.classList.remove('hidden');
+                    renderTable(filtered);
+                }
+            }
+
+            updateBatchBar();
+        }
+
+        // Group Badge Color Helper
+        function getGroupBadgeClass(group) {
+            switch(group) {
+                case '가족': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                case '친구': return 'bg-purple-50 text-purple-700 border-purple-200';
+                case '직장': return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                default: return 'bg-slate-100 text-slate-700 border-slate-200';
+            }
+        }
+
+        // Render Cards View
+        function renderCardGrid(items) {
+            DOM.cardGridView.innerHTML = items.map(contact => {
+                const isSelected = selectedContactIds.has(contact.id);
+                return `
+                    <div class="bg-white rounded-xl border ${isSelected ? 'border-blue-500 ring-2 ring-blue-100' : 'border-slate-200'} p-5 shadow-sm hover:shadow-md transition group relative flex flex-col justify-between">
+                        <!-- Top Row: Checkbox, Group Badge, Favorite Star -->
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center space-x-2">
+                                    <input type="checkbox" value="${contact.id}" ${isSelected ? 'checked' : ''} 
+                                        onchange="toggleSelectContact('${contact.id}')"
+                                        class="item-checkbox rounded text-blue-600 focus:ring-0 w-4 h-4 cursor-pointer">
+                                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border ${getGroupBadgeClass(contact.group)}">
+                                        ${contact.group}
+                                    </span>
+                                </div>
+                                <button onclick="toggleFavorite('${contact.id}')" class="text-lg focus:outline-none transition transform active:scale-125">
+                                    <i class="fa-${contact.favorite ? 'solid' : 'regular'} fa-star ${contact.favorite ? 'text-amber-400' : 'text-slate-300 hover:text-amber-400'}"></i>
+                                </button>
+                            </div>
+
+                            <!-- Avatar & Info -->
+                            <div class="flex items-start space-x-3 mb-4">
+                                <div class="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-lg flex-shrink-0">
+                                    ${contact.name.charAt(0)}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <h3 class="font-bold text-slate-900 text-base truncate">${escapeHtml(contact.name)}</h3>
+                                    <div class="flex items-center space-x-1 mt-1">
+                                        <span class="text-sm text-slate-600 font-medium">${contact.phone}</span>
+                                        <button onclick="copyToClipboard('${contact.phone}')" title="전화번호 복사" class="text-slate-400 hover:text-blue-600 p-1 rounded">
+                                            <i class="fa-regular fa-copy text-xs"></i>
+                                        </button>
+                                    </div>
+                                    ${contact.email ? `<p class="text-xs text-slate-400 truncate mt-0.5"><i class="fa-regular fa-envelope mr-1"></i>${escapeHtml(contact.email)}</p>` : ''}
+                                </div>
+                            </div>
+
+                            ${contact.memo ? `
+                                <div class="bg-slate-50 p-2.5 rounded-lg text-xs text-slate-500 mb-4 line-clamp-2 border border-slate-100">
+                                    ${escapeHtml(contact.memo)}
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Card Footer Buttons -->
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                            <button onclick="openModal('${contact.id}')" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition flex items-center space-x-1">
+                                <i class="fa-solid fa-pen"></i>
+                                <span>수정</span>
+                            </button>
+                            <button onclick="confirmDeleteContact('${contact.id}')" class="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition flex items-center space-x-1">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>삭제</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render Table View
+        function renderTable(items) {
+            DOM.tableBody.innerHTML = items.map(contact => {
+                const isSelected = selectedContactIds.has(contact.id);
+                return `
+                    <tr class="hover:bg-slate-50 transition ${isSelected ? 'bg-blue-50/40' : ''}">
+                        <td class="p-4 text-center">
+                            <input type="checkbox" value="${contact.id}" ${isSelected ? 'checked' : ''} 
+                                onchange="toggleSelectContact('${contact.id}')"
+                                class="item-checkbox rounded text-blue-600 focus:ring-0 w-4 h-4 cursor-pointer">
+                        </td>
+                        <td class="p-4 font-semibold text-slate-800 flex items-center space-x-2">
+                            <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-xs">
+                                ${contact.name.charAt(0)}
+                            </div>
+                            <span>${escapeHtml(contact.name)}</span>
+                        </td>
+                        <td class="p-4 text-slate-600">
+                            <div class="flex items-center space-x-1">
+                                <span>${contact.phone}</span>
+                                <button onclick="copyToClipboard('${contact.phone}')" title="복사" class="text-slate-400 hover:text-blue-600 p-1">
+                                    <i class="fa-regular fa-copy text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="p-4 text-slate-500">${contact.email ? escapeHtml(contact.email) : '-'}</td>
+                        <td class="p-4">
+                            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full border ${getGroupBadgeClass(contact.group)}">
+                                ${contact.group}
+                            </span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <button onclick="toggleFavorite('${contact.id}')" class="text-base focus:outline-none">
+                                <i class="fa-${contact.favorite ? 'solid' : 'regular'} fa-star ${contact.favorite ? 'text-amber-400' : 'text-slate-300 hover:text-amber-400'}"></i>
+                            </button>
+                        </td>
+                        <td class="p-4 text-right">
+                            <div class="flex items-center justify-end space-x-1">
+                                <button onclick="openModal('${contact.id}')" class="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition" title="수정">
+                                    <i class="fa-solid fa-pen text-sm"></i>
+                                </button>
+                                <button onclick="confirmDeleteContact('${contact.id}')" class="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="삭제">
+                                    <i class="fa-solid fa-trash text-sm"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // View Mode Switcher
+        function setViewMode(mode) {
+            viewMode = mode;
+            if (mode === 'card') {
+                DOM.cardViewBtn.classList.add('bg-white', 'shadow-sm', 'text-blue-600');
+                DOM.cardViewBtn.classList.remove('text-slate-400');
+                DOM.tableViewBtn.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
+                DOM.tableViewBtn.classList.add('text-slate-400');
+            } else {
+                DOM.tableViewBtn.classList.add('bg-white', 'shadow-sm', 'text-blue-600');
+                DOM.tableViewBtn.classList.remove('text-slate-400');
+                DOM.cardViewBtn.classList.remove('bg-white', 'shadow-sm', 'text-blue-600');
+                DOM.cardViewBtn.classList.add('text-slate-400');
+            }
+            render();
+        }
+
+        // Count update for filters
+        function updateGroupCounts() {
+            const counts = {
+                ALL: contacts.length,
+                FAV: contacts.filter(c => c.favorite).length,
+                가족: contacts.filter(c => c.group === '가족').length,
+                친구: contacts.filter(c => c.group === '친구').length,
+                직장: contacts.filter(c => c.group === '직장').length,
+                기타: contacts.filter(c => c.group === '기타').length
+            };
+
+            for (const [key, count] of Object.entries(counts)) {
+                const badge = document.getElementById(`count-${key}`);
+                if (badge) badge.textContent = count;
+            }
+        }
+
+        // Favorite Toggle
+        function toggleFavorite(id) {
+            contacts = contacts.map(c => c.id === id ? { ...c, favorite: !c.favorite } : c);
+            saveContacts();
+            render();
+            showToast('즐겨찾기 상태가 변경되었습니다.', 'info');
+        }
+
+        // Modal Handlers
+        function openModal(id = null) {
+            DOM.phoneError.classList.add('hidden');
+            if (id) {
+                const contact = contacts.find(c => c.id === id);
+                if (!contact) return;
+                DOM.modalTitle.textContent = '연락처 수정';
+                DOM.contactId.value = contact.id;
+                DOM.inputName.value = contact.name;
+                DOM.inputPhone.value = contact.phone;
+                DOM.inputEmail.value = contact.email || '';
+                DOM.inputGroup.value = contact.group || '기타';
+                DOM.inputFavorite.checked = !!contact.favorite;
+                DOM.inputMemo.value = contact.memo || '';
+            } else {
+                DOM.modalTitle.textContent = '새 연락처 추가';
+                DOM.contactForm.reset();
+                DOM.contactId.value = '';
+                DOM.inputGroup.value = currentGroupFilter !== 'ALL' && currentGroupFilter !== 'FAV' ? currentGroupFilter : '기타';
+            }
+            DOM.contactModal.classList.remove('hidden');
+            DOM.inputName.focus();
+        }
+
+        function closeModal() {
+            DOM.contactModal.classList.add('hidden');
+            DOM.contactForm.reset();
+        }
+
+        // Form Submit Action
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const name = DOM.inputName.value.trim();
+            const phone = DOM.inputPhone.value.trim();
+            const email = DOM.inputEmail.value.trim();
+            const group = DOM.inputGroup.value;
+            const favorite = DOM.inputFavorite.checked;
+            const memo = DOM.inputMemo.value.trim();
+            const id = DOM.contactId.value;
+
+            // Validate Phone format (Simple Regex)
+            const phoneRegex = /^\d{2,3}-\d{3,4}-\d{4}$/;
+            if (!phoneRegex.test(phone)) {
+                DOM.phoneError.classList.remove('hidden');
+                return;
+            }
+
+            if (id) {
+                // Update
+                contacts = contacts.map(c => c.id === id ? { ...c, name, phone, email, group, favorite, memo } : c);
+                showToast('연락처가 성공적으로 수정되었습니다.', 'success');
+            } else {
+                // Create
+                const newContact = {
+                    id: Date.now().toString(),
+                    name,
+                    phone,
+                    email,
+                    group,
+                    favorite,
+                    memo,
+                    createdAt: Date.now()
+                };
+                contacts.unshift(newContact);
+                showToast('새 연락처가 추가되었습니다.', 'success');
+            }
+
+            saveContacts();
+            closeModal();
+            render();
+        }
+
+        // Delete Contact
+        function confirmDeleteContact(id) {
+            const contact = contacts.find(c => c.id === id);
+            if (!contact) return;
+
+            openConfirmModal(
+                '연락처 삭제',
+                `'${contact.name}' 연락처를 정말 삭제하시겠습니까?`,
+                () => {
+                    contacts = contacts.filter(c => c.id !== id);
+                    selectedContactIds.delete(id);
+                    saveContacts();
+                    render();
+                    showToast('연락처가 삭제되었습니다.', 'info');
+                }
+            );
+        }
+
+        // Batch Selection Logic
+        function toggleSelectContact(id) {
+            if (selectedContactIds.has(id)) {
+                selectedContactIds.delete(id);
+            } else {
+                selectedContactIds.add(id);
+            }
+            updateBatchBar();
+        }
+
+        function handleSelectAll(e) {
+            const isChecked = e.target.checked;
+            const visibleContacts = getFilteredContacts();
+            
+            if (isChecked) {
+                visibleContacts.forEach(c => selectedContactIds.add(c.id));
+            } else {
+                visibleContacts.forEach(c => selectedContactIds.delete(c.id));
+            }
+            
+            render();
+        }
+
+        function updateBatchBar() {
+            const count = selectedContactIds.size;
+            DOM.selectedCount.textContent = count;
+            if (count > 0) {
+                DOM.batchActionBar.classList.remove('hidden');
+            } else {
+                DOM.batchActionBar.classList.add('hidden');
+            }
+
+            const visibleContacts = getFilteredContacts();
+            const allVisibleSelected = visibleContacts.length > 0 && visibleContacts.every(c => selectedContactIds.has(c.id));
+            DOM.selectAllCheckbox.checked = allVisibleSelected;
+            DOM.tableSelectAll.checked = allVisibleSelected;
+        }
+
+        function handleBatchDelete() {
+            if (selectedContactIds.size === 0) return;
+
+            openConfirmModal(
+                '선택 항목 삭제',
+                `선택한 ${selectedContactIds.size}개의 연락처를 삭제하시겠습니까?`,
+                () => {
+                    contacts = contacts.filter(c => !selectedContactIds.has(c.id));
+                    selectedContactIds.clear();
+                    saveContacts();
+                    render();
+                    showToast('선택한 연락처들이 삭제되었습니다.', 'info');
+                }
+            );
+        }
+
+        // Confirm Modal Helper
+        function openConfirmModal(title, message, callback) {
+            DOM.confirmTitle.textContent = title;
+            DOM.confirmMessage.textContent = message;
+            confirmCallback = callback;
+            DOM.confirmModal.classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            DOM.confirmModal.classList.add('hidden');
+            confirmCallback = null;
+        }
+
+        // Clipboard Copy
+        function copyToClipboard(text) {
+            const tempInput = document.createElement('input');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand('copy');
+                showToast(`전화번호(${text})가 클립보드에 복사되었습니다.`, 'success');
+            } catch (err) {
+                showToast('복사에 실패했습니다.', 'error');
+            }
+            document.body.removeChild(tempInput);
+        }
+
+        // Export to JSON
+        function exportToJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(contacts, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `phonebook_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('JSON 파일로 내보내기 완료!', 'success');
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            if (contacts.length === 0) {
+                showToast('내보낼 연락처가 없습니다.', 'error');
+                return;
+            }
+
+            let csvContent = "\uFEFF이름,전화번호,이메일,그룹,즐겨찾기,메모\n";
+            contacts.forEach(c => {
+                const fav = c.favorite ? "예" : "아니오";
+                const memo = (c.memo || '').replace(/"/g, '""');
+                csvContent += `"${c.name}","${c.phone}","${c.email || ''}","${c.group}","${fav}","${memo}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `phonebook_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('CSV 파일로 내보내기 완료!', 'success');
+        }
+
+        // Import from JSON
+        function importFromJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (Array.isArray(imported)) {
+                        // Sanitize & validate minimal fields
+                        const validItems = imported.filter(item => item.name && item.phone);
+                        if (validItems.length > 0) {
+                            contacts = validItems;
+                            saveContacts();
+                            render();
+                            showToast(`${validItems.length}개의 연락처를 가져왔습니다.`, 'success');
+                        } else {
+                            showToast('올바른 연락처 데이터가 없습니다.', 'error');
+                        }
+                    } else {
+                        showToast('유효하지 않은 JSON 형식을 가진 파일입니다.', 'error');
+                    }
+                } catch (err) {
+                    showToast('파일을 읽는 중 오류가 발생했습니다.', 'error');
+                }
+                DOM.importJsonInput.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        // Toast Notifications
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-red-600' : 'bg-slate-800';
+            const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info';
+
+            toast.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-lg flex items-center space-x-2 text-sm font-medium transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i><span>${escapeHtml(message)}</span>`;
+
+            DOM.toastContainer.appendChild(toast);
+
+            // Animate In
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Auto Remove
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // HTML Escape Helper
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
